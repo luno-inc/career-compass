@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, RefreshCw, Home, Target } from 'lucide-react';
@@ -8,7 +8,7 @@ import ScenarioMap from '../components/scenarios/ScenarioMap';
 import ScenarioDetail from '../components/scenarios/ScenarioDetail';
 
 export default function Scenarios() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [scenarios, setScenarios] = useState([]);
   const [selectedScenarioId, setSelectedScenarioId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,10 +25,10 @@ export default function Scenarios() {
       }));
       setScenarios(scenariosWithId);
     } else {
-      navigate(createPageUrl('Profile'));
+      router.push(createPageUrl('Profile'));
     }
     setLoading(false);
-  }, [navigate]);
+  }, [router]);
 
   useEffect(() => {
     if (selectedScenarioId) {
@@ -42,7 +42,7 @@ export default function Scenarios() {
   const handleStartOver = () => {
     sessionStorage.removeItem('careerCompassProfile');
     sessionStorage.removeItem('careerCompassScenarios');
-    navigate(createPageUrl('Home'));
+    router.push(createPageUrl('Home'));
   };
 
 
@@ -62,7 +62,7 @@ export default function Scenarios() {
           <div>
             <Button
               variant="ghost"
-              onClick={() => navigate(createPageUrl('EventSelection'))}
+              onClick={() => router.push(createPageUrl('EventSelection'))}
               className="mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -77,7 +77,7 @@ export default function Scenarios() {
           </div>
           <div className="flex gap-3">
             <Button
-              onClick={() => navigate(createPageUrl('EventSelection'))}
+              onClick={() => router.push(createPageUrl('EventSelection'))}
               variant="outline"
               className="border-indigo-200 hover:bg-indigo-50"
             >
@@ -119,7 +119,7 @@ export default function Scenarios() {
                 外生イベントを選択して、未来のキャリアシナリオを生成しましょう
               </p>
               <Button
-                onClick={() => navigate(createPageUrl('Profile'))}
+                onClick={() => router.push(createPageUrl('Profile'))}
                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
               >
                 診断を開始する

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,7 @@ const TIMEFRAME_COLORS = {
 };
 
 export default function FutureJobs() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [expandedJob, setExpandedJob] = useState(null);
 
@@ -33,7 +33,7 @@ export default function FutureJobs() {
         <div className="mb-10">
           <Button
             variant="ghost"
-            onClick={() => navigate(createPageUrl('Home'))}
+            onClick={() => router.push(createPageUrl('Home'))}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

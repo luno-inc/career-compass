@@ -69,8 +69,8 @@ export default function ScenarioGenerator() {
       } else {
         throw new Error('シナリオが生成されませんでした');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err?.message ?? String(err));
       toast.error('生成に失敗しました');
     } finally {
       setLoading(false);

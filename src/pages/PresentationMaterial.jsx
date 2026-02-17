@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 export default function PresentationMaterial() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
@@ -605,7 +605,7 @@ export default function PresentationMaterial() {
         <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate(createPageUrl('Home'))}
+            onClick={() => router.push(createPageUrl('Home'))}
             className="text-white hover:bg-white/10"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

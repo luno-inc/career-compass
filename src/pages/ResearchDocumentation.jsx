@@ -1,12 +1,12 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, BookOpen, Download } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 export default function ResearchDocumentation() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleDownload = () => {
     const content = document.getElementById('research-content').innerText;
@@ -25,7 +25,7 @@ export default function ResearchDocumentation() {
         <div className="flex items-center justify-between mb-8">
           <Button
             variant="ghost"
-            onClick={() => navigate(createPageUrl('Home'))}
+            onClick={() => router.push(createPageUrl('Home'))}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
