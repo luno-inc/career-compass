@@ -102,7 +102,7 @@ export default function ScenarioDetail({ scenario, index }) {
             )}
 
             {/* 外生イベント */}
-            {scenario.external_events && scenario.external_events.length > 0 && (
+            {scenario.external_events && scenario.external_events.length > 0 ? (
               <div className="bg-slate-50 rounded-lg p-5 border border-slate-200">
                 <h4 className="font-semibold mb-3 text-slate-800">考慮した外生イベント</h4>
                 <ul className="space-y-2">
@@ -113,6 +113,11 @@ export default function ScenarioDetail({ scenario, index }) {
                     </li>
                   ))}
                 </ul>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-slate-500">
+                <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>根拠情報がありません</p>
               </div>
             )}
           </TabsContent>

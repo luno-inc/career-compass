@@ -46,9 +46,6 @@ export default function ScenarioMap({ scenarios, onSelectScenario, selectedScena
           {/* ラベル */}
           <text x={mapSize - padding + 5} y={mapSize/2 + 4} fontSize="12" fill="#64748b">ポジティブ</text>
           <text x={5} y={mapSize/2 + 4} fontSize="12" fill="#64748b">ネガティブ</text>
-          <text x={mapSize/2 - 15} y={padding - 10} fontSize="12" fill="#64748b">確度：高</text>
-          <text x={mapSize/2 - 15} y={mapSize - padding + 20} fontSize="12" fill="#64748b">確度：低</text>
-
           {/* 象限ラベル */}
           <text x={mapSize*3/4} y={mapSize/4} fontSize="10" fill="#94a3b8" textAnchor="middle">実現しやすい好機</text>
           <text x={mapSize/4} y={mapSize/4} fontSize="10" fill="#94a3b8" textAnchor="middle">起こりやすい危機</text>

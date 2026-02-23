@@ -28,9 +28,6 @@ export default function ScenarioResultCard({ scenario, index }) {
     <Card className="border-none shadow-none bg-white">
       <CardHeader className="px-12 pt-16 pb-8">
         <div className="mb-6">
-          <p className="text-sm tracking-widest text-slate-400 mb-3">
-            {typeConfig.label}
-          </p>
           <CardTitle 
             className="text-4xl font-light leading-tight mb-0"
             style={{ color: typeConfig.color, letterSpacing: '-0.02em' }}
@@ -51,33 +48,6 @@ export default function ScenarioResultCard({ scenario, index }) {
               >
                 {scenario.role_definition}
               </p>
-            </section>
-          )}
-
-          {/* 参考にした外生イベント */}
-          {scenario.evidence && scenario.evidence.length > 0 && (
-            <section>
-              <h2 className="text-xs tracking-widest text-slate-400 mb-6">
-                EXTERNAL DRIVERS
-              </h2>
-              <div className="space-y-2">
-                {scenario.evidence.map((item, idx) => (
-                  <div 
-                    key={idx}
-                    className="flex items-start gap-3 p-4 rounded-lg bg-slate-50 border border-slate-100"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-semibold text-slate-600">{idx + 1}</span>
-                    </div>
-                    <p 
-                      className="text-sm leading-relaxed"
-                      style={{ lineHeight: '1.8', color: '#333' }}
-                    >
-                      {item}
-                    </p>
-                  </div>
-                ))}
-              </div>
             </section>
           )}
 

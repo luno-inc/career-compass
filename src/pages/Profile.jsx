@@ -19,9 +19,10 @@ import {
 
 const SAMPLE_DATA = {
   student: {
-    university: '早稲田大学 政治経済学部 経済学科',
-    company: '就職活動中',
-    age: '21歳',
+    age: '21〜25歳',
+    work_or_student: '学生',
+    education: '大学卒業',
+    company: '',
     grade: '大学3年',
     major: '経済学・経営学',
     industry: ['IT・ソフトウェア', 'コンサルティング', '金融・保険'],
@@ -45,9 +46,10 @@ const SAMPLE_DATA = {
     uncertainty_attitude: 'ある程度の挑戦はしたい'
   },
   professor: {
-    university: '東京大学 文学部 社会学専攻（学部）\n東京大学大学院 人文社会系研究科 社会学専攻（博士課程修了）',
-    company: '〇〇大学 社会学部 教授',
-    age: '45〜49歳',
+    age: '46〜50歳',
+    work_or_student: '社会人',
+    company: '〇〇大学 社会学部 教授（博士課程修了後、同大学で教員として勤務）',
+    education: '博士課程修了',
     grade: '教員・研究者',
     major: '社会学・社会福祉学',
     industry: ['教育・研究', '公務員・非営利', 'コンサルティング'],

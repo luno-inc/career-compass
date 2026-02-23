@@ -30,12 +30,16 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
     if (!apiKey) {
       console.log(`[${requestId}] Error: ANTHROPIC_API_KEY not configured`);
+      const isVercel = !!process.env.VERCEL;
+      const errorMessage = isVercel
+        ? 'APIキーが設定されていません。Vercel の Project Settings → Environment Variables に ANTHROPIC_API_KEY を追加し、再デプロイしてください。'
+        : 'APIキーが設定されていません。.env.local に ANTHROPIC_API_KEY を追加し、開発サーバーを再起動してください。';
       return NextResponse.json(
         {
           requestId,
           ok: false,
           stage: 'config',
-          error: 'APIキーが設定されていません。.env.local に ANTHROPIC_API_KEY を追加し、開発サーバーを再起動してください。',
+          error: errorMessage,
         },
         { status: 200 }
       );

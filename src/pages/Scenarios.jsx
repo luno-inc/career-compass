@@ -2,16 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ArrowLeft, RefreshCw, Home, Target } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import ScenarioMap from '../components/scenarios/ScenarioMap';
-import ScenarioDetail from '../components/scenarios/ScenarioDetail';
+import ScenarioResultCard from '../components/scenarios/ScenarioResultCard';
 
 export default function Scenarios() {
   const router = useRouter();
   const [scenarios, setScenarios] = useState([]);
-  const [selectedScenarioId, setSelectedScenarioId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showConfirmNavigate, setShowConfirmNavigate] = useState(false);
 
   useEffect(() => {
     // セッションストレージからシナリオを読み込み
@@ -30,19 +39,15 @@ export default function Scenarios() {
     setLoading(false);
   }, [router]);
 
-  useEffect(() => {
-    if (selectedScenarioId) {
-      const element = document.getElementById(selectedScenarioId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-  }, [selectedScenarioId]);
-
   const handleStartOver = () => {
     sessionStorage.removeItem('careerCompassProfile');
     sessionStorage.removeItem('careerCompassScenarios');
     router.push(createPageUrl('Home'));
+  };
+
+  const handleConfirmNavigateToEventSelection = () => {
+    setShowConfirmNavigate(false);
+    router.push('/event-selection');
   };
 
 
@@ -62,7 +67,7 @@ export default function Scenarios() {
           <div>
             <Button
               variant="ghost"
-              onClick={() => router.push(createPageUrl('EventSelection'))}
+              onClick={() => router.push('/event-selection')}
               className="mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -77,7 +82,7 @@ export default function Scenarios() {
           </div>
           <div className="flex gap-3">
             <Button
-              onClick={() => router.push(createPageUrl('EventSelection'))}
+              onClick={() => setShowConfirmNavigate(true)}
               variant="outline"
               className="border-indigo-200 hover:bg-indigo-50"
             >
@@ -94,19 +99,6 @@ export default function Scenarios() {
             </Button>
           </div>
         </div>
-
-        {scenarios.length > 0 && (
-          <div className="mb-8">
-            <ScenarioMap
-              scenarios={scenarios}
-              onSelectScenario={setSelectedScenarioId}
-              selectedScenarioId={selectedScenarioId}
-            />
-            <p className="text-center text-sm text-slate-500 mt-3">
-              マップ上の番号をクリックすると、該当シナリオにジャンプします
-            </p>
-          </div>
-        )}
 
         {scenarios.length === 0 ? (
           <Card className="shadow-lg text-center p-12">
@@ -127,14 +119,32 @@ export default function Scenarios() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-20">
             {scenarios.map((scenario, index) => (
-              <div key={scenario.id} id={scenario.id}>
-                <ScenarioDetail scenario={scenario} index={index} />
-              </div>
+              <ScenarioResultCard key={scenario.id} scenario={scenario} index={index} />
             ))}
           </div>
         )}
+
+        <AlertDialog open={showConfirmNavigate} onOpenChange={setShowConfirmNavigate}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>本当に遷移しますか？</AlertDialogTitle>
+              <AlertDialogDescription>
+                遷移すると、現在のシナリオのデータは削除されます。必要に応じてスクリーンショットを保存してからお進みください。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>キャンセル</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmNavigateToEventSelection}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                はい、遷移する
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
