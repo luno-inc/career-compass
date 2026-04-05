@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Compass, Sparkles, ChevronRight, Shield } from 'lucide-react';
+import HomeShareFromQuery from '@/components/home/HomeShareFromQuery';
 
 export default function Home() {
   return (
@@ -15,6 +16,10 @@ export default function Home() {
           className="relative max-w-5xl mx-auto px-6 w-full"
           style={{ paddingTop: 'clamp(1.5rem, 6vh, 3rem)', paddingBottom: 'clamp(1.5rem, 4vh, 2rem)' }}
         >
+          <Suspense fallback={null}>
+            <HomeShareFromQuery />
+          </Suspense>
+
           <div className="flex items-center justify-center mb-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full blur-xl opacity-30 animate-pulse" />
@@ -33,9 +38,12 @@ export default function Home() {
           </p>
 
           <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2 text-sm text-green-800">
-              <Shield className="w-4 h-4 shrink-0" />
-              <span>入力データは保存されません。セッション終了後に自動削除されます。</span>
+            <div className="inline-flex items-start gap-2 bg-green-50 border border-green-200 rounded-2xl px-4 py-3 text-sm text-green-800 max-w-2xl text-left">
+              <Shield className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                診断の入力内容は保存されず、セッション終了後にブラウザから消えます。
+                あなたが「共有」したシナリオだけ、友だちに見せるためサーバーに一時保存されます（約30日で削除）。
+              </span>
             </div>
           </div>
 

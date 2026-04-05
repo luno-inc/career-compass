@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+'use client';
+
+import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const TYPE_CONFIG = {
   realistic: {
@@ -20,16 +22,23 @@ const TYPE_CONFIG = {
   }
 };
 
-export default function ScenarioResultCard({ scenario, index }) {
-  const [showEvidence, setShowEvidence] = useState(false);
+export default function ScenarioResultCard({ scenario, index: _index, compact = false }) {
   const typeConfig = TYPE_CONFIG[scenario.scenario_type] || TYPE_CONFIG.realistic;
+
+  const headerPad = compact ? 'px-5 sm:px-8 pt-8 pb-6' : 'px-12 pt-16 pb-8';
+  const contentPad = compact ? 'px-5 sm:px-8 pb-10' : 'px-12 pb-16';
+  const titleClass = compact
+    ? 'text-2xl sm:text-3xl font-light leading-tight mb-0'
+    : 'text-4xl font-light leading-tight mb-0';
+  const sectionGap = compact ? 'space-y-10' : 'space-y-16';
+  const bodyLead = compact ? 'text-lg' : 'text-xl';
 
   return (
     <Card className="border-none shadow-none bg-white">
-      <CardHeader className="px-12 pt-16 pb-8">
+      <CardHeader className={headerPad}>
         <div className="mb-6">
           <CardTitle 
-            className="text-4xl font-light leading-tight mb-0"
+            className={titleClass}
             style={{ color: typeConfig.color, letterSpacing: '-0.02em' }}
           >
             {scenario.scenario_title}
@@ -37,13 +46,13 @@ export default function ScenarioResultCard({ scenario, index }) {
         </div>
       </CardHeader>
 
-      <CardContent className="px-12 pb-16">
-        <div className="w-full space-y-16">
+      <CardContent className={contentPad}>
+        <div className={`w-full ${sectionGap}`}>
           {/* 役割 */}
           {scenario.role_definition && (
             <section>
               <p 
-                className="text-xl font-light leading-relaxed"
+                className={`${bodyLead} font-light leading-relaxed`}
                 style={{ lineHeight: '2.0', color: typeConfig.color }}
               >
                 {scenario.role_definition}

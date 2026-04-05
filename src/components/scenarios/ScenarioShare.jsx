@@ -5,13 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link2, Check, MessageCircle, Copy, Compass, Facebook, Instagram } from 'lucide-react';
 import QRCode from 'react-qr-code';
+import { getShareOrigin } from '@/lib/share-origin';
 
 const SHARE_HASHTAGS = '#CareerCompass #未来キャリア #キャリア診断';
 
-/** 共有URLのオリジン（QR・X・LINE・リンクコピー）。環境変数があればそちらを優先 */
-const SHARE_ORIGIN = (
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://career-compass-six-jet.vercel.app'
-).replace(/\/$/, '');
+/** API に送るシナリオ（クライアント専用 id 等を除く） */
+function scenariosForSharePayload(scenarios) {
+  return scenarios.map((s) => ({
+    scenario_title: s.scenario_title,
+    role_definition: s.role_definition,
+    scenario_description: s.scenario_description,
+    reasoning: s.reasoning,
+    next_step_recommendation: s.next_step_recommendation,
+    scenario_type: s.scenario_type,
+  }));
+}
 
 const MAX_TITLE_LINE = 56;
 
@@ -60,6 +68,9 @@ export function buildSharePostText(scenarioTitle, deeplinkUrl) {
 
 export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
   const [shareRef, setShareRef] = useState('');
+  const [shareId, setShareId] = useState(null);
+  /** idle | loading | ok | error */
+  const [shareRegisterState, setShareRegisterState] = useState('idle');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedResult, setCopiedResult] = useState(false);
   const [igStoryCopied, setIgStoryCopied] = useState(false);
@@ -74,7 +85,47 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
     setShareRef(id);
   }, []);
 
-  const deeplinkUrl = shareRef ? `${SHARE_ORIGIN}/?ref=${encodeURIComponent(shareRef)}` : '';
+  useEffect(() => {
+    if (!scenarios?.length) return undefined;
+    let cancelled = false;
+    setShareRegisterState('loading');
+    setShareId(null);
+
+    const run = async () => {
+      try {
+        const res = await fetch('/api/shared-scenario', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenarios: scenariosForSharePayload(scenarios) }),
+        });
+        const data = await res.json();
+        if (cancelled) return;
+        if (data?.ok && data?.id) {
+          setShareId(data.id);
+          setShareRegisterState('ok');
+        } else {
+          setShareRegisterState('error');
+        }
+      } catch {
+        if (!cancelled) setShareRegisterState('error');
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [scenarios]);
+
+  const origin = getShareOrigin();
+  const deeplinkUrl =
+    shareRegisterState === 'ok' && shareId
+      ? shareRef
+        ? `${origin}/?share=${encodeURIComponent(shareId)}&ref=${encodeURIComponent(shareRef)}`
+        : `${origin}/?share=${encodeURIComponent(shareId)}`
+      : '';
+  const fallbackRefOnlyUrl = shareRef ? `${origin}/?ref=${encodeURIComponent(shareRef)}` : '';
+
   const shareText = deeplinkUrl ? buildSharePostText(titleForSns, deeplinkUrl) : '';
   const resultPlain = buildResultPlainText(scenarios);
 
@@ -128,14 +179,16 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
   }, [shareText, deeplinkUrl]);
 
   const copyFriendLink = useCallback(async () => {
+    const target = deeplinkUrl || fallbackRefOnlyUrl;
+    if (!target) return;
     try {
-      await navigator.clipboard.writeText(deeplinkUrl);
+      await navigator.clipboard.writeText(target);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
     } catch {
       setCopiedLink(false);
     }
-  }, [deeplinkUrl]);
+  }, [deeplinkUrl, fallbackRefOnlyUrl]);
 
   const copyResultText = useCallback(async () => {
     if (!resultPlain) return;
@@ -148,9 +201,14 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
     }
   }, [resultPlain]);
 
-  if (!shareRef || !deeplinkUrl) {
+  if (!shareRef || !scenarios?.length) {
     return null;
   }
+
+  const linkReady = Boolean(deeplinkUrl);
+  const shareUrlBlocked = shareRegisterState === 'error';
+  const shareLoading =
+    Boolean(scenarios?.length) && shareRegisterState !== 'ok' && shareRegisterState !== 'error';
 
   const actionBtnClass =
     'w-full min-h-12 sm:min-h-14 h-auto py-3 px-3 rounded-xl border-slate-200 text-slate-800 hover:bg-slate-50 gap-2 text-sm sm:text-[15px] font-medium leading-snug justify-center text-center';
@@ -161,7 +219,16 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
         <CardContent className="p-0 min-w-0">
           <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-3 sm:pb-4 text-center border-b border-slate-100">
             <h2 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">結果をシェア</h2>
+            <p className="mt-2 text-xs sm:text-sm text-slate-500 leading-snug max-w-xl mx-auto">
+              共有用リンクでは、トップ画面（/?share=…）にこの結果を表示できます。サーバーに一時保存され、約30日で削除されます（環境により異なります）。
+            </p>
           </div>
+
+          {shareUrlBlocked && (
+            <div className="mx-4 sm:mx-6 mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs sm:text-sm text-amber-900">
+              共有用リンクを作成できませんでした（ストレージ未設定など）。「リンクをコピー」はトップへの導線のみになります。管理者は Upstash Redis の環境変数を設定してください。
+            </div>
+          )}
 
           <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-10 min-w-0">
             <div className="min-w-0">
@@ -177,7 +244,7 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
                   {copiedResult ? <Check className="w-5 h-5 shrink-0 text-green-600" /> : <Copy className="w-5 h-5 shrink-0" />}
                   <span>{copiedResult ? 'コピー済' : '結果の文面をコピー'}</span>
                 </Button>
-                <Button type="button" variant="outline" className={actionBtnClass} onClick={openX}>
+                <Button type="button" variant="outline" className={actionBtnClass} onClick={openX} disabled={!linkReady}>
                   <span className="font-bold text-base leading-none shrink-0">𝕏</span>
                   <span>X</span>
                 </Button>
@@ -186,6 +253,7 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
                   variant="outline"
                   className={`${actionBtnClass} border-[#06C755]/40 text-[#06C755] hover:bg-green-50`}
                   onClick={openLine}
+                  disabled={!linkReady}
                 >
                   <MessageCircle className="w-5 h-5 shrink-0" />
                   <span>LINE</span>
@@ -195,6 +263,7 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
                   variant="outline"
                   className={`${actionBtnClass} border-[#1877F2]/40 text-[#1877F2] hover:bg-blue-50/80`}
                   onClick={openFacebook}
+                  disabled={!linkReady}
                 >
                   <Facebook className="w-5 h-5 shrink-0" />
                   <span>Facebook</span>
@@ -204,14 +273,23 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
                   variant="outline"
                   className={`${actionBtnClass} border-pink-500/35 text-pink-600 hover:bg-pink-50/80`}
                   onClick={openInstagramStory}
+                  disabled={!linkReady}
                   title="スマホでは共有シートからInstagramを選べます。表示されない場合は文面をコピーしてストーリーに貼り付けられます。"
                 >
                   {igStoryCopied ? <Check className="w-5 h-5 shrink-0 text-green-600" /> : <Instagram className="w-5 h-5 shrink-0" />}
                   <span>{igStoryCopied ? '文面をコピー済' : 'ストーリーへ'}</span>
                 </Button>
-                <Button type="button" variant="outline" className={actionBtnClass} onClick={copyFriendLink}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={actionBtnClass}
+                  onClick={copyFriendLink}
+                  disabled={!deeplinkUrl && !fallbackRefOnlyUrl}
+                >
                   {copiedLink ? <Check className="w-5 h-5 shrink-0 text-green-600" /> : <Link2 className="w-5 h-5 shrink-0" />}
-                  <span>{copiedLink ? 'コピー済' : 'リンクをコピー'}</span>
+                  <span>
+                    {copiedLink ? 'コピー済' : shareUrlBlocked ? 'トップへのリンクをコピー' : 'リンクをコピー'}
+                  </span>
                 </Button>
               </div>
             </div>
@@ -222,14 +300,22 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
               <p className="mb-4 sm:mb-5 text-sm sm:text-base md:text-lg text-slate-700 text-center font-medium leading-snug px-1 max-w-md">
                 カメラで読み取って、友だちにも診断してもらおう
               </p>
-              <div className="bg-white p-3 sm:p-5 rounded-xl border border-slate-200 shadow-inner w-full max-w-[min(200px,calc(100vw-3rem))] mx-auto">
-                <QRCode
-                  value={deeplinkUrl}
-                  size={200}
-                  level="M"
-                  style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
-                  viewBox="0 0 200 200"
-                />
+              <div className="bg-white p-3 sm:p-5 rounded-xl border border-slate-200 shadow-inner w-full max-w-[min(200px,calc(100vw-3rem))] mx-auto min-h-[120px] flex items-center justify-center">
+                {shareLoading && (
+                  <div className="text-sm text-slate-500 text-center px-2">共有用リンクを準備しています…</div>
+                )}
+                {!shareLoading && linkReady && (
+                  <QRCode
+                    value={deeplinkUrl}
+                    size={200}
+                    level="M"
+                    style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
+                    viewBox="0 0 200 200"
+                  />
+                )}
+                {!shareLoading && shareUrlBlocked && (
+                  <div className="text-xs text-slate-500 text-center px-2">QR は共有リンク準備後に表示されます</div>
+                )}
               </div>
             </div>
           </div>

@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
-/** QR・共有リンクの ?ref= で流入したとき、任意の計測用に保持（トップはそのまま表示） */
+/** QR・共有リンクの ?ref= で流入したとき、任意の計測用に sessionStorage に保持（/share/* でも同様） */
 export default function HomeEntryRefCapture() {
   const searchParams = useSearchParams();
 
