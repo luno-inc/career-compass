@@ -116,57 +116,64 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
   }
 
   const actionBtnClass =
-    'flex-1 min-w-0 h-14 px-2 sm:px-3 rounded-xl border-slate-200 text-slate-800 hover:bg-slate-50 gap-2 text-sm sm:text-[15px] font-medium leading-tight whitespace-normal';
+    'w-full min-h-12 sm:min-h-14 h-auto py-3 px-3 rounded-xl border-slate-200 text-slate-800 hover:bg-slate-50 gap-2 text-sm sm:text-[15px] font-medium leading-snug justify-center text-center';
 
   return (
-    <section className="mt-20 pt-10 w-full">
-      <Card className="border border-slate-200/80 shadow-sm bg-white/95 rounded-2xl overflow-hidden w-full">
-        <CardContent className="p-0">
-          <div className="px-6 pt-8 pb-4 text-center border-b border-slate-100">
+    <section className="mt-12 sm:mt-20 pt-6 sm:pt-10 w-full min-w-0">
+      <Card className="border border-slate-200/80 shadow-sm bg-white/95 rounded-2xl overflow-hidden w-full max-w-full min-w-0">
+        <CardContent className="p-0 min-w-0">
+          <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-3 sm:pb-4 text-center border-b border-slate-100">
             <h2 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">結果をシェア</h2>
           </div>
 
-          <div className="px-6 py-8 space-y-10">
-            <div>
-              <div className="flex flex-row gap-2 w-full overflow-x-auto pb-1 sm:overflow-visible sm:pb-0 [-webkit-overflow-scrolling:touch]">
+          <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-10 min-w-0">
+            <div className="min-w-0">
+              {/* モバイル: 縦並び / md〜: 2列 / xl: 横一列 */}
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4 xl:gap-2 w-full min-w-0">
                 <Button
                   type="button"
                   variant="outline"
-                  className={`${actionBtnClass} shrink-0 sm:shrink sm:min-w-0`}
+                  className={actionBtnClass}
                   onClick={copyResultText}
                   disabled={!resultPlain}
                 >
                   {copiedResult ? <Check className="w-5 h-5 shrink-0 text-green-600" /> : <Copy className="w-5 h-5 shrink-0" />}
-                  <span className="text-center">{copiedResult ? 'コピー済' : '結果の文面をコピー'}</span>
+                  <span>{copiedResult ? 'コピー済' : '結果の文面をコピー'}</span>
                 </Button>
-                <Button type="button" variant="outline" className={`${actionBtnClass} shrink-0 sm:shrink sm:min-w-0`} onClick={openX}>
+                <Button type="button" variant="outline" className={actionBtnClass} onClick={openX}>
                   <span className="font-bold text-base leading-none shrink-0">𝕏</span>
                   <span>X</span>
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  className={`${actionBtnClass} shrink-0 sm:shrink sm:min-w-0 border-[#06C755]/40 text-[#06C755] hover:bg-green-50`}
+                  className={`${actionBtnClass} border-[#06C755]/40 text-[#06C755] hover:bg-green-50`}
                   onClick={openLine}
                 >
                   <MessageCircle className="w-5 h-5 shrink-0" />
                   <span>LINE</span>
                 </Button>
-                <Button type="button" variant="outline" className={`${actionBtnClass} shrink-0 sm:shrink sm:min-w-0`} onClick={copyFriendLink}>
+                <Button type="button" variant="outline" className={actionBtnClass} onClick={copyFriendLink}>
                   {copiedLink ? <Check className="w-5 h-5 shrink-0 text-green-600" /> : <Link2 className="w-5 h-5 shrink-0" />}
-                  <span className="text-center">{copiedLink ? 'コピー済' : 'リンクをコピー'}</span>
+                  <span>{copiedLink ? 'コピー済' : 'リンクをコピー'}</span>
                 </Button>
               </div>
             </div>
 
             <div className="h-px bg-slate-100" />
 
-            <div className="flex flex-col items-center">
-              <p className="mb-5 text-base sm:text-lg text-slate-700 text-center font-medium leading-snug px-2">
+            <div className="flex flex-col items-center min-w-0 w-full">
+              <p className="mb-4 sm:mb-5 text-sm sm:text-base md:text-lg text-slate-700 text-center font-medium leading-snug px-1 max-w-md">
                 カメラで読み取って、友だちにも診断してもらおう
               </p>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-inner">
-                <QRCode value={deeplinkUrl} size={200} level="M" />
+              <div className="bg-white p-3 sm:p-5 rounded-xl border border-slate-200 shadow-inner w-full max-w-[min(200px,calc(100vw-3rem))] mx-auto">
+                <QRCode
+                  value={deeplinkUrl}
+                  size={200}
+                  level="M"
+                  style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
+                  viewBox="0 0 200 200"
+                />
               </div>
             </div>
           </div>
