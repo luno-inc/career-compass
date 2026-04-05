@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Link2, Check, MessageCircle, Copy, Compass } from 'lucide-react';
+import { Link2, Check, MessageCircle, Copy, Compass, Facebook, Instagram } from 'lucide-react';
 import QRCode from 'react-qr-code';
 
 const SHARE_HASHTAGS = '#CareerCompass #未来キャリア #キャリア診断';
@@ -62,6 +62,7 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
   const [shareRef, setShareRef] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedResult, setCopiedResult] = useState(false);
+  const [igStoryCopied, setIgStoryCopied] = useState(false);
 
   const titleForSns = scenarioTitle || scenarios[0]?.scenario_title || '';
 
@@ -89,6 +90,42 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
       'noopener,noreferrer'
     );
   }, [shareText]);
+
+  const openFacebook = useCallback(() => {
+    const u = encodeURIComponent(deeplinkUrl);
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${u}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  }, [deeplinkUrl]);
+
+  /** ストーリーは Web API で直接開けないため、共有シート → 失敗時はコピー＋アプリのカメラ起動 */
+  const openInstagramStory = useCallback(async () => {
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: 'Career Compass',
+          text: shareText,
+          url: deeplinkUrl,
+        });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setIgStoryCopied(true);
+      setTimeout(() => setIgStoryCopied(false), 3500);
+    } catch {
+      setIgStoryCopied(false);
+    }
+    const mobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (mobile) {
+      window.location.href = 'instagram://camera';
+    }
+  }, [shareText, deeplinkUrl]);
 
   const copyFriendLink = useCallback(async () => {
     try {
@@ -128,8 +165,8 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
 
           <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-8 sm:space-y-10 min-w-0">
             <div className="min-w-0">
-              {/* モバイル: 縦並び / md〜: 2列 / xl: 横一列 */}
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4 xl:gap-2 w-full min-w-0">
+              {/* モバイル: 縦並び / sm〜: 2列 / lg〜: 3列 */}
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 w-full min-w-0">
                 <Button
                   type="button"
                   variant="outline"
@@ -152,6 +189,25 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
                 >
                   <MessageCircle className="w-5 h-5 shrink-0" />
                   <span>LINE</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={`${actionBtnClass} border-[#1877F2]/40 text-[#1877F2] hover:bg-blue-50/80`}
+                  onClick={openFacebook}
+                >
+                  <Facebook className="w-5 h-5 shrink-0" />
+                  <span>Facebook</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={`${actionBtnClass} border-pink-500/35 text-pink-600 hover:bg-pink-50/80`}
+                  onClick={openInstagramStory}
+                  title="スマホでは共有シートからInstagramを選べます。表示されない場合は文面をコピーしてストーリーに貼り付けられます。"
+                >
+                  {igStoryCopied ? <Check className="w-5 h-5 shrink-0 text-green-600" /> : <Instagram className="w-5 h-5 shrink-0" />}
+                  <span>{igStoryCopied ? '文面をコピー済' : 'ストーリーへ'}</span>
                 </Button>
                 <Button type="button" variant="outline" className={actionBtnClass} onClick={copyFriendLink}>
                   {copiedLink ? <Check className="w-5 h-5 shrink-0 text-green-600" /> : <Link2 className="w-5 h-5 shrink-0" />}
