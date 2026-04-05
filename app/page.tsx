@@ -1,7 +1,16 @@
 'use client'
 
+import { Suspense } from 'react'
 import Home from '@/src/pages/Home'
+import HomeEntryRefCapture from './HomeEntryRefCapture'
 
 export default function Page() {
-  return <Home />
+  return (
+    <>
+      <Suspense fallback={null}>
+        <HomeEntryRefCapture />
+      </Suspense>
+      <Home />
+    </>
+  )
 }

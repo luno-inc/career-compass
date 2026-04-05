@@ -228,26 +228,26 @@ export default function Profile() {
   const progress = ((currentSection + 1) / SECTIONS.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 py-12 px-4">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 py-6 sm:py-12 px-3 sm:px-4 pb-10">
+      <div className="max-w-5xl mx-auto w-full min-w-0">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Button
             variant="ghost"
             onClick={() => router.push('/')}
-            className="mb-4"
+            className="mb-3 -ml-2 h-auto py-2 px-2"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 mr-2 shrink-0" />
             ホームに戻る
           </Button>
           
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-slate-900">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 mb-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 min-w-0">
               プロフィール入力
             </h1>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto shrink-0">
                   <Users className="w-4 h-4" />
                   サンプルデータ
                 </Button>
@@ -284,14 +284,14 @@ export default function Profile() {
         </div>
 
         {/* Section Navigation */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1.5 sm:gap-2 mb-6 sm:mb-8">
           {SECTIONS.map((section, index) => {
             const IconComponent = SECTION_ICONS[section.iconType];
             return (
               <button
                 key={section.id}
                 onClick={() => setCurrentSection(index)}
-                className={`group relative p-3 rounded-xl text-center transition-all duration-200 ${
+                className={`group relative p-2 sm:p-3 rounded-lg sm:rounded-xl text-center transition-all duration-200 min-h-[4.5rem] sm:min-h-0 ${
                   index === currentSection
                     ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20'
                     : index < currentSection
@@ -303,7 +303,7 @@ export default function Profile() {
                   <IconComponent className={`w-5 h-5 mb-1.5 ${
                     index === currentSection ? 'text-white' : index < currentSection ? 'text-slate-600' : 'text-slate-400 group-hover:text-slate-600'
                   }`} />
-                  <div className="text-[10px] font-medium leading-tight">{section.title.split('・')[0]}</div>
+                  <div className="text-[9px] sm:text-[10px] font-medium leading-tight line-clamp-2">{section.title.split('・')[0]}</div>
                 </div>
                 {index < currentSection && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center">
@@ -319,23 +319,23 @@ export default function Profile() {
 
         {/* Current Section */}
         <Card className="shadow-xl border-slate-200/50 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center">
+          <CardHeader className="pb-4 px-4 pt-4 sm:px-6 sm:pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-2">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
                 {(() => {
                   const IconComponent = SECTION_ICONS[SECTIONS[currentSection].iconType];
-                  return <IconComponent className="w-6 h-6 text-white" />;
+                  return <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-white" />;
                 })()}
               </div>
-              <div>
-                <CardTitle className="text-2xl text-slate-900">{SECTIONS[currentSection].title}</CardTitle>
-                <CardDescription className="text-base text-slate-500">
+              <div className="min-w-0">
+                <CardTitle className="text-xl sm:text-2xl text-slate-900 break-words">{SECTIONS[currentSection].title}</CardTitle>
+                <CardDescription className="text-sm sm:text-base text-slate-500 mt-1">
                   {SECTIONS[currentSection].description}
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-6 sm:px-6">
             <QuestionSection
                               sectionId={SECTIONS[currentSection].id}
                               profile={profile}
@@ -355,40 +355,40 @@ export default function Profile() {
         </Card>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mt-6 sm:mt-8">
           <Button
             variant="outline"
             onClick={handlePrevious}
             disabled={currentSection === 0}
-            className="border-indigo-200"
+            className="border-indigo-200 w-full sm:w-auto sm:order-first"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 mr-2 shrink-0" />
             前へ
           </Button>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={handleSave}
-              className="border-indigo-200"
+              className="border-indigo-200 w-full sm:w-auto"
             >
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="w-4 h-4 mr-2 shrink-0" />
               一時保存
             </Button>
 
             <Button
               onClick={handleNext}
-              className="bg-slate-900 hover:bg-slate-800 text-white"
+              className="bg-slate-900 hover:bg-slate-800 text-white w-full sm:w-auto"
             >
             {currentSection === SECTIONS.length - 1 ? (
               <>
-                <Sparkles className="w-4 h-4 mr-2" />
+                <Sparkles className="w-4 h-4 mr-2 shrink-0" />
                 完了して次へ
               </>
             ) : (
               <>
                 次へ
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-4 h-4 ml-2 shrink-0" />
               </>
             )}
             </Button>

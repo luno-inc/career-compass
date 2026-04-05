@@ -15,6 +15,7 @@ import {
 import { ArrowLeft, RefreshCw, Home, Target } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import ScenarioResultCard from '../components/scenarios/ScenarioResultCard';
+import ScenarioShare from '../components/scenarios/ScenarioShare';
 
 export default function Scenarios() {
   const router = useRouter();
@@ -73,47 +74,47 @@ export default function Scenarios() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 py-12 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 py-6 sm:py-12 px-3 sm:px-4 pb-8">
+      <div className="max-w-5xl mx-auto w-full min-w-0">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between mb-8">
+          <div className="min-w-0 flex-1">
             <Button
               variant="ghost"
               onClick={() => setShowConfirmBackToEvent(true)}
-              className="mb-4"
+              className="mb-3 -ml-2 sm:-ml-3 h-auto py-2 px-2 text-left whitespace-normal"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              イベント選択に戻る
+              <ArrowLeft className="w-4 h-4 mr-2 shrink-0" />
+              <span className="text-sm sm:text-base">イベント選択に戻る</span>
             </Button>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent break-words">
               あなたのキャリアシナリオ
             </h1>
-            <p className="text-sm text-slate-500 mt-2">
+            <p className="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
               ※ このデータはブラウザを閉じると削除されます。必要に応じてスクリーンショットを保存してください。
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto lg:shrink-0">
             <Button
               onClick={() => setShowConfirmNavigate(true)}
               variant="outline"
-              className="border-indigo-200 hover:bg-indigo-50"
+              className="border-indigo-200 hover:bg-indigo-50 w-full sm:w-auto justify-center"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <RefreshCw className="w-4 h-4 mr-2 shrink-0" />
               別のシナリオを生成
             </Button>
             <Button
               onClick={() => setShowConfirmStartOver(true)}
               variant="outline"
-              className="border-slate-200 hover:bg-slate-50"
+              className="border-slate-200 hover:bg-slate-50 w-full sm:w-auto justify-center"
             >
-              <Home className="w-4 h-4 mr-2" />
+              <Home className="w-4 h-4 mr-2 shrink-0" />
               最初からやり直す
             </Button>
           </div>
         </div>
 
         {scenarios.length === 0 ? (
-          <Card className="shadow-lg text-center p-12">
+          <Card className="shadow-lg text-center p-6 sm:p-12">
             <CardContent>
               <div className="text-slate-400 mb-4">
                 <Target className="w-16 h-16 mx-auto" />
@@ -131,11 +132,14 @@ export default function Scenarios() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-20">
-            {scenarios.map((scenario, index) => (
-              <ScenarioResultCard key={scenario.id} scenario={scenario} index={index} />
-            ))}
-          </div>
+          <>
+            <div className="space-y-12 sm:space-y-20">
+              {scenarios.map((scenario, index) => (
+                <ScenarioResultCard key={scenario.id} scenario={scenario} index={index} />
+              ))}
+            </div>
+            <ScenarioShare scenarios={scenarios} scenarioTitle={scenarios[0]?.scenario_title} />
+          </>
         )}
 
         <AlertDialog open={showConfirmNavigate} onOpenChange={setShowConfirmNavigate}>
