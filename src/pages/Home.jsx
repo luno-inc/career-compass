@@ -75,6 +75,14 @@ export default function Home() {
           <p className="text-[10px] sm:text-xs text-slate-400 tracking-widest uppercase">
             Future Career Scenario
           </p>
+          <a
+            href="https://design-luno.studio.site/legal"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 text-xs text-slate-500 hover:text-indigo-600 underline underline-offset-2 decoration-slate-300 hover:decoration-indigo-500 transition-colors"
+          >
+            特定商取引法について
+          </a>
         </div>
       </footer>
     </div>
