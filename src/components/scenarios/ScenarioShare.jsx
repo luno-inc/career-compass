@@ -219,9 +219,6 @@ export default function ScenarioShare({ scenarios = [], scenarioTitle }) {
         <CardContent className="p-0 min-w-0">
           <div className="px-4 sm:px-6 pt-6 sm:pt-8 pb-3 sm:pb-4 text-center border-b border-slate-100">
             <h2 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">結果をシェア</h2>
-            <p className="mt-2 text-xs sm:text-sm text-slate-500 leading-snug max-w-xl mx-auto">
-              共有用リンクでは、トップ画面（/?share=…）にこの結果を表示できます。サーバーに一時保存され、約30日で削除されます（環境により異なります）。
-            </p>
           </div>
 
           {shareUrlBlocked && (

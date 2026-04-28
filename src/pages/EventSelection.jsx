@@ -72,6 +72,7 @@ export default function EventSelection() {
   const [generating, setGenerating] = useState(false);
   const [events, setEvents] = useState(() => generateRandomEvents(2));
   const [testError, setTestError] = useState(null);
+  const [notice, setNotice] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authCode, setAuthCode] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
@@ -128,6 +129,7 @@ export default function EventSelection() {
   const handleGenerateClick = () => {
     if (generating) return;
     setTestError(null);
+    setNotice('');
     const remaining = (billing?.monthlyRemaining || 0) + (billing?.oneTimeCredits || 0);
     if (!authenticated) {
       setAuthStep('email');
@@ -147,6 +149,8 @@ export default function EventSelection() {
   const sendCode = async () => {
     setSendingCode(true);
     setDevCode('');
+    setTestError(null);
+    setNotice('');
     try {
       const normalized = normalizeEmail(authEmail);
       if (BYPASS_EMAILS.includes(normalized)) {
@@ -206,7 +210,7 @@ export default function EventSelection() {
       setDevCode('');
       await refreshBilling();
       setAuthModalOpen(false);
-      setTestError({ error: '認証が完了しました。購入情報を確認してからシナリオ生成してください。' });
+      setNotice('認証が完了しました。購入情報を確認してからシナリオ生成してください。');
     } finally {
       setVerifyingCode(false);
     }
@@ -274,6 +278,11 @@ export default function EventSelection() {
             </p>
           ) : null}
         </div>
+        {notice ? (
+          <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+            {notice}
+          </div>
+        ) : null}
 
         {!bypass && authenticated ? (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
