@@ -264,7 +264,7 @@ export default function EventSelection() {
           <h2 className="text-lg font-bold text-slate-800">利用状況</h2>
           {bypass ? (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-              テストモード: このアカウントは課金不要でシナリオ生成できます。
+              テストモード: このアカウントは支払い不要で、シナリオ生成は仮データ表示のみです。
             </div>
           ) : null}
           <UsageBadge authenticated={authenticated} billing={billing} />

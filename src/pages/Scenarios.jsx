@@ -20,7 +20,7 @@ import ScenarioShare from '../components/scenarios/ScenarioShare';
 export default function Scenarios() {
   const router = useRouter();
   const [scenarios, setScenarios] = useState([]);
-  const [hideShare, setHideShare] = useState(false);
+  const [isMockResult, setIsMockResult] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showConfirmNavigate, setShowConfirmNavigate] = useState(false);
   const [showConfirmBackToEvent, setShowConfirmBackToEvent] = useState(false);
@@ -37,7 +37,7 @@ export default function Scenarios() {
         id: `scenario-${index}`
       }));
       setScenarios(scenariosWithId);
-      setHideShare(Boolean(parsed?.mock) || Boolean(parsed?.bypass));
+      setIsMockResult(Boolean(parsed?.mock) || Boolean(parsed?.bypass));
     } else {
       router.push(createPageUrl('Profile'));
     }
@@ -94,6 +94,11 @@ export default function Scenarios() {
             <p className="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
               ※ このデータはブラウザを閉じると削除されます。必要に応じてスクリーンショットを保存してください。
             </p>
+            {isMockResult ? (
+              <p className="mt-3 inline-block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs sm:text-sm text-amber-900">
+                テストモード: この結果は仮データです（本番のClaude生成ではありません）。
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto lg:shrink-0">
             <Button
@@ -140,9 +145,7 @@ export default function Scenarios() {
                 <ScenarioResultCard key={scenario.id} scenario={scenario} index={index} />
               ))}
             </div>
-            {!hideShare ? (
-              <ScenarioShare scenarios={scenarios} scenarioTitle={scenarios[0]?.scenario_title} />
-            ) : null}
+            <ScenarioShare scenarios={scenarios} scenarioTitle={scenarios[0]?.scenario_title} />
           </>
         )}
 
