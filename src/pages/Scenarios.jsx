@@ -20,6 +20,7 @@ import ScenarioShare from '../components/scenarios/ScenarioShare';
 export default function Scenarios() {
   const router = useRouter();
   const [scenarios, setScenarios] = useState([]);
+  const [hideShare, setHideShare] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showConfirmNavigate, setShowConfirmNavigate] = useState(false);
   const [showConfirmBackToEvent, setShowConfirmBackToEvent] = useState(false);
@@ -36,6 +37,7 @@ export default function Scenarios() {
         id: `scenario-${index}`
       }));
       setScenarios(scenariosWithId);
+      setHideShare(Boolean(parsed?.mock) || Boolean(parsed?.bypass));
     } else {
       router.push(createPageUrl('Profile'));
     }
@@ -138,7 +140,9 @@ export default function Scenarios() {
                 <ScenarioResultCard key={scenario.id} scenario={scenario} index={index} />
               ))}
             </div>
-            <ScenarioShare scenarios={scenarios} scenarioTitle={scenarios[0]?.scenario_title} />
+            {!hideShare ? (
+              <ScenarioShare scenarios={scenarios} scenarioTitle={scenarios[0]?.scenario_title} />
+            ) : null}
           </>
         )}
 
