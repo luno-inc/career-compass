@@ -13,7 +13,7 @@ create table if not exists public.entitlements (
   subscription_status text not null default 'inactive',
   subscription_id text,
   subscription_period_end timestamptz,
-  monthly_quota int not null default 30,
+  monthly_quota int not null default 50,
   monthly_used int not null default 0,
   monthly_period_key text not null default to_char(now(), 'YYYY-MM'),
   one_time_credits int not null default 0,

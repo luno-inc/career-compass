@@ -20,8 +20,8 @@ export async function supabaseAdminFetch(path: string, init: RequestInit = {}) {
 
 export function getMonthlyQuota(): number {
   const raw = process.env.ENTITLEMENT_MONTHLY_QUOTA;
-  const n = raw ? Number.parseInt(raw, 10) : 30;
-  if (!Number.isFinite(n) || n <= 0) return 30;
+  const n = raw ? Number.parseInt(raw, 10) : 50;
+  if (!Number.isFinite(n) || n <= 0) return 50;
   return n;
 }
 

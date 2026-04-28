@@ -1,15 +1,20 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft, ArrowRight, Shuffle, Sparkles } from 'lucide-react';
 import { EXTERNAL_EVENTS } from '../components/scenarios/externalEvents';
 import EventCard from '../components/scenarios/EventCard';
 import UsageBadge from '@/src/components/billing/UsageBadge';
 import PricingCard from '@/src/components/billing/PricingCard';
 import CheckoutModal from '@/src/components/billing/CheckoutModal';
+import { buildMockScenario } from '@/lib/mock-scenario';
+
+const BYPASS_EMAILS = ['info@luno-jp.com', 'atsuki20150047@gmail.com', 'kent20210325@keio.jp'];
+const normalizeEmail = (email = '') => email.trim().toLowerCase();
 
 function generateRandomEvents(count = 2) {
   const categories = Object.keys(EXTERNAL_EVENTS);
@@ -71,11 +76,14 @@ export default function EventSelection() {
   const [authCode, setAuthCode] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [billing, setBilling] = useState(null);
+  const [bypass, setBypass] = useState(false);
   const [devCode, setDevCode] = useState('');
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState('one_time');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authStep, setAuthStep] = useState('email');
 
   const refreshBilling = async () => {
     const authRes = await fetch('/api/auth/me');
@@ -85,6 +93,7 @@ export default function EventSelection() {
     setAuthenticated(!!authJson?.authenticated);
     setAuthEmail(authJson?.email || authEmail);
     setBilling(billingJson?.billing || null);
+    setBypass(!!billingJson?.bypass);
   };
 
   useEffect(() => {
@@ -121,10 +130,11 @@ export default function EventSelection() {
     setTestError(null);
     const remaining = (billing?.monthlyRemaining || 0) + (billing?.oneTimeCredits || 0);
     if (!authenticated) {
-      setTestError({ error: 'シナリオ生成にはメール認証が必要です。先に認証してください。' });
+      setAuthStep('email');
+      setAuthModalOpen(true);
       return;
     }
-    if (remaining <= 0) {
+    if (!bypass && remaining <= 0) {
       setTestError({ error: '利用可能回数がありません。下のプランから購入してください。' });
       return;
     }
@@ -138,6 +148,30 @@ export default function EventSelection() {
     setSendingCode(true);
     setDevCode('');
     try {
+      const normalized = normalizeEmail(authEmail);
+      if (BYPASS_EMAILS.includes(normalized)) {
+        const profileText = profile
+          ? Object.entries(profile)
+              .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+              .join('\n')
+          : '';
+        const eventTexts = events.map((e) => e.text);
+        const mock = buildMockScenario({ profileText, eventTexts, email: normalized });
+        sessionStorage.setItem(
+          'careerCompassScenarios',
+          JSON.stringify({
+            ok: true,
+            mock: true,
+            bypass: true,
+            scenarios: [mock],
+          })
+        );
+        setAuthenticated(true);
+        setBypass(true);
+        setAuthModalOpen(false);
+        router.push('/scenarios');
+        return;
+      }
       const res = await fetch('/api/auth/send-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -149,6 +183,7 @@ export default function EventSelection() {
         return;
       }
       if (data.devCode) setDevCode(data.devCode);
+      setAuthStep('code');
     } finally {
       setSendingCode(false);
     }
@@ -170,6 +205,8 @@ export default function EventSelection() {
       setAuthCode('');
       setDevCode('');
       await refreshBilling();
+      setAuthModalOpen(false);
+      setTestError({ error: '認証が完了しました。購入情報を確認してからシナリオ生成してください。' });
     } finally {
       setVerifyingCode(false);
     }
@@ -225,42 +262,29 @@ export default function EventSelection() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 space-y-4">
           <h2 className="text-lg font-bold text-slate-800">利用状況</h2>
-          <UsageBadge authenticated={authenticated} billing={billing} />
-          {!authenticated && (
-            <div className="grid md:grid-cols-[1fr_auto] gap-2 items-end">
-              <div className="space-y-2">
-                <Input
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder="メールアドレス"
-                />
-                <div className="flex gap-2">
-                  <Input
-                    value={authCode}
-                    onChange={(e) => setAuthCode(e.target.value)}
-                    placeholder="6桁コード"
-                  />
-                  <Button onClick={verifyCode} disabled={verifyingCode}>
-                    認証する
-                  </Button>
-                </div>
-                {devCode ? <p className="text-xs text-amber-700">開発用コード: {devCode}</p> : null}
-              </div>
-              <Button onClick={sendCode} disabled={sendingCode || !authEmail}>
-                コード送信
-              </Button>
+          {bypass ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              テストモード: このアカウントは課金不要でシナリオ生成できます。
             </div>
-          )}
+          ) : null}
+          <UsageBadge authenticated={authenticated} billing={billing} />
+          {!authenticated ? (
+            <p className="text-sm text-slate-600">
+              「シナリオを生成」を押すとメール認証モーダルが開きます。認証後に購入情報と課金導線が表示されます。
+            </p>
+          ) : null}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">プラン購入</h2>
-          <PricingCard
-            onBuyOneTime={() => openCheckout('one_time')}
-            onSubscribe={() => openCheckout('subscription')}
-            disabled={!authenticated}
-          />
-        </div>
+        {!bypass && authenticated ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+            <h2 className="text-lg font-bold text-slate-800 mb-4">プラン購入</h2>
+            <PricingCard
+              onBuyOneTime={() => openCheckout('one_time')}
+              onSubscribe={() => openCheckout('subscription')}
+              disabled={!authenticated}
+            />
+          </div>
+        ) : null}
 
         {/* イベント一覧ヘッダー */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
@@ -373,6 +397,45 @@ export default function EventSelection() {
         email={authEmail}
         planType={checkoutPlan}
       />
+      <Dialog open={authModalOpen} onOpenChange={setAuthModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>メール認証</DialogTitle>
+            <DialogDescription>
+              {authStep === 'email'
+                ? 'メールアドレスを入力してください。'
+                : '6桁の認証コードを入力してください。'}
+            </DialogDescription>
+          </DialogHeader>
+          {authStep === 'email' ? (
+            <Input
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              placeholder="メールアドレス"
+            />
+          ) : (
+            <div className="space-y-2">
+              <Input
+                value={authCode}
+                onChange={(e) => setAuthCode(e.target.value)}
+                placeholder="6桁コード"
+              />
+              {devCode ? <p className="text-xs text-amber-700">開発用コード: {devCode}</p> : null}
+            </div>
+          )}
+          <DialogFooter>
+            {authStep === 'email' ? (
+              <Button onClick={sendCode} disabled={sendingCode || !authEmail}>
+                {sendingCode ? '送信中...' : 'コード送信'}
+              </Button>
+            ) : (
+              <Button onClick={verifyCode} disabled={verifyingCode || !authCode}>
+                {verifyingCode ? '認証中...' : '認証する'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

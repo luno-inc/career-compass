@@ -15,7 +15,7 @@ export default function PricingCard({ onBuyOneTime, onSubscribe, disabled }) {
       <div className="rounded-xl border border-indigo-200 p-4 bg-indigo-50">
         <div className="text-sm text-indigo-600 mb-1">サブスクリプション</div>
         <div className="text-2xl font-bold text-indigo-900 mb-1">¥1,000 / 月</div>
-        <div className="text-sm text-indigo-700 mb-3">月30回までシナリオ生成</div>
+        <div className="text-sm text-indigo-700 mb-3">月50回までシナリオ生成</div>
         <Button onClick={onSubscribe} disabled={disabled} className="w-full bg-indigo-600 hover:bg-indigo-700">
           月額プランを開始
         </Button>

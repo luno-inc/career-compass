@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getVerifiedEmailFromCookie } from '@/lib/billing-auth';
 import { consumeScenarioCredit, getBillingStatus } from '@/lib/billing-store';
+import { isBypassUser } from '@/lib/billing-whitelist';
+import { buildMockScenario } from '@/lib/mock-scenario';
 
 export async function POST(request: NextRequest) {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -40,6 +42,22 @@ export async function POST(request: NextRequest) {
         },
         { status: 200 }
       );
+    }
+
+    const bypass = isBypassUser(verifiedEmail);
+    if (bypass) {
+      const mockScenario = buildMockScenario({
+        profileText,
+        eventTexts,
+        email: verifiedEmail,
+      });
+      return NextResponse.json({
+        requestId,
+        ok: true,
+        bypass: true,
+        mock: true,
+        scenarios: [mockScenario],
+      });
     }
 
     const billing = await getBillingStatus(verifiedEmail);

@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getStripe();
+    // #region agent log
+    fetch('http://127.0.0.1:7858/ingest/0acef3a6-66c7-448d-b8c5-c3e8284eee63',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b57eb6'},body:JSON.stringify({sessionId:'b57eb6',location:'app/api/billing/create-checkout-session/route.ts:POST',message:'Server Stripe config shape',data:{hasSecret:!!process.env.STRIPE_SECRET_KEY,secretPrefix:process.env.STRIPE_SECRET_KEY?process.env.STRIPE_SECRET_KEY.slice(0,8):null,priceIdPrefix:priceId?priceId.slice(0,6):null,mode:planType},timestamp:Date.now(),runId:'run1',hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
     const origin = request.nextUrl.origin;
     const mode = planType === 'one_time' ? 'payment' : 'subscription';
 
