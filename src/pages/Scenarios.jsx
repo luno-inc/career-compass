@@ -47,7 +47,7 @@ export default function Scenarios() {
   const handleStartOver = () => {
     sessionStorage.removeItem('careerCompassProfile');
     sessionStorage.removeItem('careerCompassScenarios');
-    router.push(createPageUrl('Home'));
+    router.push('/');
   };
 
   const handleConfirmNavigateToEventSelection = () => {
