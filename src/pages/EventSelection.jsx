@@ -3,16 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ArrowLeft, ArrowRight, Shuffle, Sparkles } from 'lucide-react';
-import { createPageUrl } from '@/utils';
 import { EXTERNAL_EVENTS } from '../components/scenarios/externalEvents';
 import EventCard from '../components/scenarios/EventCard';
-
-const TIMEFRAME_LABELS = {
-  short: '5〜10年後（2030〜2035年）',
-  medium: '15〜25年後（2040〜2050年）',
-  long: '25〜50年後（2050〜2075年）'
-};
+import UsageBadge from '@/src/components/billing/UsageBadge';
+import PricingCard from '@/src/components/billing/PricingCard';
+import CheckoutModal from '@/src/components/billing/CheckoutModal';
 
 function generateRandomEvents(count = 2) {
   const categories = Object.keys(EXTERNAL_EVENTS);
@@ -70,6 +67,25 @@ export default function EventSelection() {
   const [generating, setGenerating] = useState(false);
   const [events, setEvents] = useState(() => generateRandomEvents(2));
   const [testError, setTestError] = useState(null);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authCode, setAuthCode] = useState('');
+  const [authenticated, setAuthenticated] = useState(false);
+  const [billing, setBilling] = useState(null);
+  const [devCode, setDevCode] = useState('');
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState('one_time');
+
+  const refreshBilling = async () => {
+    const authRes = await fetch('/api/auth/me');
+    const authJson = await authRes.json();
+    const billingRes = await fetch('/api/billing/status');
+    const billingJson = await billingRes.json();
+    setAuthenticated(!!authJson?.authenticated);
+    setAuthEmail(authJson?.email || authEmail);
+    setBilling(billingJson?.billing || null);
+  };
 
   useEffect(() => {
     const savedProfile = sessionStorage.getItem('careerCompassProfile');
@@ -82,10 +98,19 @@ export default function EventSelection() {
     if (errJson) {
       try {
         setTestError(JSON.parse(errJson));
-      } catch (_) {}
+      } catch {}
       sessionStorage.removeItem('careerCompassGenerateError');
     }
+    refreshBilling().catch(() => {});
   }, [router]);
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get('checkout') === 'success') {
+      refreshBilling().catch(() => {});
+      setCheckoutOpen(false);
+    }
+  }, []);
 
   const shuffleEvents = () => {
     setEvents(generateRandomEvents(2));
@@ -94,10 +119,69 @@ export default function EventSelection() {
   const handleGenerateClick = () => {
     if (generating) return;
     setTestError(null);
+    const remaining = (billing?.monthlyRemaining || 0) + (billing?.oneTimeCredits || 0);
+    if (!authenticated) {
+      setTestError({ error: 'シナリオ生成にはメール認証が必要です。先に認証してください。' });
+      return;
+    }
+    if (remaining <= 0) {
+      setTestError({ error: '利用可能回数がありません。下のプランから購入してください。' });
+      return;
+    }
     const eventTexts = events.map(e => e.text);
     sessionStorage.setItem('careerCompassEventTexts', JSON.stringify(eventTexts));
     setGenerating(true);
     router.push('/event-selection/generating');
+  };
+
+  const sendCode = async () => {
+    setSendingCode(true);
+    setDevCode('');
+    try {
+      const res = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: authEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        setTestError({ error: data.error || '認証コード送信に失敗しました。' });
+        return;
+      }
+      if (data.devCode) setDevCode(data.devCode);
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const verifyCode = async () => {
+    setVerifyingCode(true);
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: authEmail, code: authCode }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        setTestError({ error: data.error || '認証に失敗しました。' });
+        return;
+      }
+      setAuthCode('');
+      setDevCode('');
+      await refreshBilling();
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
+  const openCheckout = (planType) => {
+    if (!authenticated) {
+      setTestError({ error: '購入前にメール認証を完了してください。' });
+      return;
+    }
+    setCheckoutPlan(planType);
+    setCheckoutOpen(true);
   };
 
   if (!profile) {
@@ -137,6 +221,45 @@ export default function EventSelection() {
           <p className="text-slate-600 text-lg">
             これらのイベントをもとに、1つのシナリオを生成します。
           </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-6 space-y-4">
+          <h2 className="text-lg font-bold text-slate-800">利用状況</h2>
+          <UsageBadge authenticated={authenticated} billing={billing} />
+          {!authenticated && (
+            <div className="grid md:grid-cols-[1fr_auto] gap-2 items-end">
+              <div className="space-y-2">
+                <Input
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  placeholder="メールアドレス"
+                />
+                <div className="flex gap-2">
+                  <Input
+                    value={authCode}
+                    onChange={(e) => setAuthCode(e.target.value)}
+                    placeholder="6桁コード"
+                  />
+                  <Button onClick={verifyCode} disabled={verifyingCode}>
+                    認証する
+                  </Button>
+                </div>
+                {devCode ? <p className="text-xs text-amber-700">開発用コード: {devCode}</p> : null}
+              </div>
+              <Button onClick={sendCode} disabled={sendingCode || !authEmail}>
+                コード送信
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">プラン購入</h2>
+          <PricingCard
+            onBuyOneTime={() => openCheckout('one_time')}
+            onSubscribe={() => openCheckout('subscription')}
+            disabled={!authenticated}
+          />
         </div>
 
         {/* イベント一覧ヘッダー */}
@@ -244,6 +367,12 @@ export default function EventSelection() {
           </div>
         )}
       </div>
+      <CheckoutModal
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        email={authEmail}
+        planType={checkoutPlan}
+      />
     </div>
   );
 }

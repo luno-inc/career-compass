@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedEmailFromCookie } from '@/lib/billing-auth';
+import { consumeScenarioCredit, getBillingStatus } from '@/lib/billing-store';
 
 export async function POST(request: NextRequest) {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -23,6 +25,36 @@ export async function POST(request: NextRequest) {
           error: 'Invalid parameters: profileText and eventTexts are required',
         },
         { status: 400 }
+      );
+    }
+
+    const verifiedEmail = await getVerifiedEmailFromCookie();
+    if (!verifiedEmail) {
+      return NextResponse.json(
+        {
+          requestId,
+          ok: false,
+          stage: 'billing_auth',
+          error: 'シナリオ生成にはメール認証が必要です。メールアドレスを認証してから再試行してください。',
+          needsAuth: true,
+        },
+        { status: 200 }
+      );
+    }
+
+    const billing = await getBillingStatus(verifiedEmail);
+    const availableCount = billing.monthlyRemaining + billing.oneTimeCredits;
+    if (availableCount <= 0) {
+      return NextResponse.json(
+        {
+          requestId,
+          ok: false,
+          stage: 'billing_required',
+          error: '利用可能回数がありません。買い切り購入またはサブスクリプションをご利用ください。',
+          needsPurchase: true,
+          billing,
+        },
+        { status: 200 }
       );
     }
 
@@ -577,7 +609,27 @@ export async function POST(request: NextRequest) {
       scenarios: scenarios.slice(0, 1),
     };
 
-    return NextResponse.json(result);
+    const consume = await consumeScenarioCredit(verifiedEmail);
+    if (!consume.ok) {
+      return NextResponse.json(
+        {
+          requestId,
+          ok: false,
+          stage: 'billing_required',
+          error: '利用可能回数がありません。買い切り購入またはサブスクリプションをご利用ください。',
+          needsPurchase: true,
+          billing: await getBillingStatus(verifiedEmail),
+        },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json({
+      ...result,
+      billing: await getBillingStatus(verifiedEmail),
+      consumedFrom: consume.sourcePlan,
+      remainingAfterConsume: consume.remaining,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack : undefined;

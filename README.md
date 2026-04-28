@@ -24,9 +24,15 @@ npm install
 
 ### 2. 環境変数の設定
 
-シナリオ生成に Anthropic Claude API を使うため、プロジェクトルートに `.env.local` を作成し、`ANTHROPIC_API_KEY=your_anthropic_api_key_here` を記述してください。設定後は開発サーバーを再起動してください。
+プロジェクトルートに `.env.local` を作成し、必要なキーを設定してください。最低限以下が必要です。
 
-`.env.local.example` をコピーして `.env.local` にリネームし、値を編集しても構いません。
+- `ANTHROPIC_API_KEY`（シナリオ生成）
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRICE_ONETIME_100`, `STRIPE_PRICE_SUB_MONTHLY_1000`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+
+`.env.local.example` をコピーして `.env.local` にリネームし、値を編集してください。設定後は開発サーバーを再起動してください。
 
 ### 3. 開発サーバーの起動
 
