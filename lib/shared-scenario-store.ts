@@ -8,6 +8,7 @@ import {
 } from '@/lib/shared-scenario-schema';
 
 const KEY_PREFIX = 'cc:share:';
+const inMemoryShareStore = new Map<string, { record: StoredShareRecord; expiresAt: number }>();
 
 const nanoidShareId = customAlphabet(
   '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
@@ -35,13 +36,16 @@ export type StoredShareRecord = {
   createdAt: string;
 };
 
+function cleanupInMemoryStore(now: number) {
+  for (const [key, value] of inMemoryShareStore.entries()) {
+    if (value.expiresAt <= now) inMemoryShareStore.delete(key);
+  }
+}
+
 export async function createSharedScenario(
   body: unknown
 ): Promise<{ ok: true; id: string } | { ok: false; error: string; status: number }> {
   const redis = getRedis();
-  if (!redis) {
-    return { ok: false, error: '共有ストアが設定されていません。', status: 503 };
-  }
 
   const parsed = sharedScenarioPayloadSchema.safeParse(body);
   if (!parsed.success) {
@@ -62,7 +66,17 @@ export async function createSharedScenario(
 
   const id = nanoidShareId();
   const key = `${KEY_PREFIX}${id}`;
-  await redis.set(key, json, { ex: ttlSeconds() });
+  const ttl = ttlSeconds();
+  if (redis) {
+    await redis.set(key, json, { ex: ttl });
+  } else {
+    const now = Date.now();
+    cleanupInMemoryStore(now);
+    inMemoryShareStore.set(key, {
+      record,
+      expiresAt: now + ttl * 1000,
+    });
+  }
 
   return { ok: true, id };
 }
@@ -71,16 +85,27 @@ export async function getSharedScenarioById(
   id: string
 ): Promise<StoredShareRecord | null> {
   const redis = getRedis();
-  if (!redis) return null;
   const key = `${KEY_PREFIX}${id}`;
-  const raw = await redis.get(key);
-  if (raw == null) return null;
-  try {
-    const data =
-      typeof raw === 'string' ? (JSON.parse(raw) as StoredShareRecord) : (raw as StoredShareRecord);
-    if (!data.scenarios || !Array.isArray(data.scenarios)) return null;
-    return data;
-  } catch {
+  if (redis) {
+    const raw = await redis.get(key);
+    if (raw == null) return null;
+    try {
+      const data =
+        typeof raw === 'string' ? (JSON.parse(raw) as StoredShareRecord) : (raw as StoredShareRecord);
+      if (!data.scenarios || !Array.isArray(data.scenarios)) return null;
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
+  const now = Date.now();
+  cleanupInMemoryStore(now);
+  const found = inMemoryShareStore.get(key);
+  if (!found) return null;
+  if (found.expiresAt <= now) {
+    inMemoryShareStore.delete(key);
     return null;
   }
+  return found.record;
 }
