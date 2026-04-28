@@ -12,3 +12,4 @@
 {"sessionId":"b57eb6","location":"src/components/billing/CheckoutModal.jsx:open","message":"Checkout modal opened","data":{"planType":"one_time","emailPresent":true},"timestamp":1777368821583,"runId":"run2","hypothesisId":"H4"}
 {"sessionId":"b57eb6","location":"src/components/billing/CheckoutModal.jsx:open","message":"Checkout modal opened","data":{"planType":"subscription","emailPresent":true},"timestamp":1777368893446,"runId":"run2","hypothesisId":"H4"}
 {"sessionId":"b57eb6","location":"src/components/billing/CheckoutModal.jsx:open","message":"Checkout modal opened","data":{"planType":"one_time","emailPresent":true},"timestamp":1777368964534,"runId":"run2","hypothesisId":"H4"}
+{"sessionId":"b57eb6","location":"src/components/billing/CheckoutModal.jsx:useMemo","message":"Publishable key shape check","data":{"exists":true,"prefix":"pk_live_","isModern":true},"timestamp":1777369677712,"runId":"run1","hypothesisId":"H1"}

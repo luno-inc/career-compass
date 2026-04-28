@@ -83,6 +83,7 @@ export default function EventSelection() {
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState('one_time');
+  const [showOneTimeConfirm, setShowOneTimeConfirm] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authStep, setAuthStep] = useState('email');
 
@@ -118,7 +119,15 @@ export default function EventSelection() {
     const sp = new URLSearchParams(window.location.search);
     if (sp.get('checkout') === 'success') {
       refreshBilling().catch(() => {});
-      setCheckoutOpen(false);
+      const purchasedPlanType = sp.get('plan_type');
+      if (purchasedPlanType === 'one_time') {
+        setCheckoutPlan('one_time');
+        setShowOneTimeConfirm(true);
+        setCheckoutOpen(true);
+      } else {
+        setCheckoutOpen(false);
+      }
+      window.history.replaceState({}, '', '/event-selection');
     }
   }, []);
 
@@ -221,8 +230,21 @@ export default function EventSelection() {
       setTestError({ error: '購入前にメール認証を完了してください。' });
       return;
     }
+    setShowOneTimeConfirm(false);
     setCheckoutPlan(planType);
     setCheckoutOpen(true);
+  };
+
+  const handleUsePurchasedCreditNow = () => {
+    setShowOneTimeConfirm(false);
+    setCheckoutOpen(false);
+    handleGenerateClick();
+  };
+
+  const handleUsePurchasedCreditLater = () => {
+    setShowOneTimeConfirm(false);
+    setCheckoutOpen(false);
+    setNotice('1回分の購入が完了しました。必要なタイミングで「シナリオを生成」を押してください。');
   };
 
   if (!profile) {
@@ -402,9 +424,15 @@ export default function EventSelection() {
       </div>
       <CheckoutModal
         open={checkoutOpen}
-        onOpenChange={setCheckoutOpen}
+        onOpenChange={(open) => {
+          setCheckoutOpen(open);
+          if (!open) setShowOneTimeConfirm(false);
+        }}
         email={authEmail}
         planType={checkoutPlan}
+        showOneTimeConfirm={showOneTimeConfirm}
+        onConfirmUseCredit={handleUsePurchasedCreditNow}
+        onLaterUseCredit={handleUsePurchasedCreditLater}
       />
       <Dialog open={authModalOpen} onOpenChange={setAuthModalOpen}>
         <DialogContent>

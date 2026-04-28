@@ -2,8 +2,17 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
-export default function CheckoutModal({ open, onOpenChange, email, planType }) {
+export default function CheckoutModal({
+  open,
+  onOpenChange,
+  email,
+  planType,
+  showOneTimeConfirm = false,
+  onConfirmUseCredit,
+  onLaterUseCredit,
+}) {
   const [error, setError] = useState('');
   const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
   const keyMissing = !publishableKey;
@@ -39,11 +48,26 @@ export default function CheckoutModal({ open, onOpenChange, email, planType }) {
         <DialogHeader>
           <DialogTitle>お支払い</DialogTitle>
           <DialogDescription>
-            {planType === 'subscription' ? '月額プラン' : '買い切りプラン'}の決済を行います。
+            {showOneTimeConfirm
+              ? '1回分の購入が完了しました。'
+              : `${planType === 'subscription' ? '月額プラン' : '買い切りプラン'}の決済を行います。`}
           </DialogDescription>
         </DialogHeader>
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
-        {!stripePromise ? (
+        {showOneTimeConfirm ? (
+          <div className="space-y-4">
+            <p className="text-sm text-slate-700">
+              このクレジットを消費して、シナリオを生成しますか？
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+              <Button variant="outline" onClick={onLaterUseCredit}>
+                あとで生成する
+              </Button>
+              <Button onClick={onConfirmUseCredit}>このまま生成する</Button>
+            </div>
+          </div>
+        ) : null}
+        {!showOneTimeConfirm && error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {!showOneTimeConfirm && !stripePromise ? (
           <p className="text-sm text-red-600">
             {keyMissing
               ? 'Stripe公開キーが未設定です。Vercelの NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY を設定してください。'
@@ -53,11 +77,11 @@ export default function CheckoutModal({ open, onOpenChange, email, planType }) {
               ? 'Stripe公開キーの形式が不正です。pk_test_ または pk_live_ で始まるキーに更新してください。'
               : 'Stripe初期化に失敗しました。公開キーを再発行して更新してください。'}
           </p>
-        ) : (
+        ) : !showOneTimeConfirm ? (
           <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
             <EmbeddedCheckout />
           </EmbeddedCheckoutProvider>
-        )}
+        ) : null}
       </DialogContent>
     </Dialog>
   );

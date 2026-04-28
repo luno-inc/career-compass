@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { planType, email },
-      return_url: `${origin}/event-selection?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${origin}/event-selection?checkout=success&plan_type=${planType}&session_id={CHECKOUT_SESSION_ID}`,
     });
 
     return NextResponse.json({
